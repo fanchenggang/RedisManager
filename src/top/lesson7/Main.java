@@ -28,8 +28,8 @@ public class Main extends Application {
     public void start(Stage primaryStage) throws Exception {
 
 
-        HostServices hostServices = getHostServices();
-        hostServices.showDocument("www.baidu.com");
+        //HostServices hostServices = getHostServices();
+       // hostServices.showDocument("www.baidu.com");
 
         Button button = new Button("按钮");
         button.setPrefWidth(200);
@@ -49,6 +49,7 @@ public class Main extends Application {
         primaryStage.setWidth(600);
         primaryStage.setHeight(400);
         primaryStage.show();
+        System.out.println("test");
     }
 
 
