@@ -8,7 +8,7 @@ import javafx.scene.control.TreeView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
-import sample.util.redis.RedisService;
+import com.redis.manager.util.RedisService;
 
 /**
  * @author: FanChengGang
