@@ -57,6 +57,10 @@ public class RedisService {
         return jedis.get(key);
     }
 
+    public static void closeAll() {
+        jedis.close();
+    }
+
     @AllArgsConstructor
     @NoArgsConstructor
     @Getter
@@ -70,4 +74,5 @@ public class RedisService {
             return count==null?0:count;
         }
     }
+    //https://www.cnblogs.com/chy18883701161/p/11087482.html
 }

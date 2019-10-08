@@ -8,6 +8,7 @@ import javafx.scene.control.TreeView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
+import sample.util.redis.RedisService;
 
 /**
  * @author: FanChengGang
@@ -90,4 +91,9 @@ public class MainTest extends Application {
     }
 
 
+    @Override
+    public void stop() throws Exception {
+        super.stop();
+        RedisService.closeAll();
+    }
 }
