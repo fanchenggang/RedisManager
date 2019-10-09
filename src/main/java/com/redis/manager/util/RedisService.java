@@ -60,6 +60,18 @@ public class RedisService {
         jedis.close();
     }
 
+    public static String getType(String key){
+       return jedis.type(key);
+    }
+
+    public static Long getLength(String key){
+       return jedis.llen(key);
+    }
+
+    public static List<String> lrange(String key){
+       return jedis.lrange(key,0,getLength(key));
+    }
+
     @AllArgsConstructor
     @NoArgsConstructor
     @Getter
