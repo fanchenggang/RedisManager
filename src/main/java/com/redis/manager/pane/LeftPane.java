@@ -50,6 +50,9 @@ public class LeftPane {
                 TreeItem selectedItem = tree.getSelectionModel().getSelectedItem();
                 String value = (String) selectedItem.getValue();
                 TreeItem<String> selectedParentItem = selectedItem.getParent();
+                if (selectedParentItem == null){
+                    return;
+                }
                 if (selectedParentItem.getValue().startsWith("db")) {
                     String type = RedisService.getType(value);
                     if (type.equals("string")) {
