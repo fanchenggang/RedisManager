@@ -29,13 +29,13 @@ public class Application extends javafx.application.Application {
     public void start(Stage primaryStage) throws Exception {
 
         BorderPane bor = new BorderPane();
-        bor.setStyle("-fx-background-color: #B23AEE");
+    //    bor.setStyle("-fx-background-color: #B23AEE");
 
 
         bor.setTop(TopPane.pane);
         bor.setBottom(BottomPane.pane);
         bor.setLeft(LeftPane.pane);
-        bor.setRight(RightPane.pane);
+     //   bor.setRight(RightPane.pane);
         bor.setCenter(CenterPane.pane);
 
 

@@ -1,14 +1,18 @@
 package com.redis.manager.pane;
 
+import com.redis.manager.model.RedisClient;
 import com.redis.manager.model.RowData;
 import com.redis.manager.util.RedisService;
 import javafx.collections.ObservableList;
+import javafx.scene.control.TreeCell;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
+import javafx.scene.control.cell.TextFieldTreeCell;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -22,7 +26,7 @@ import java.util.Set;
 public class LeftPane {
 
     public static AnchorPane pane;
-
+  public static  TreeItem<String> rootItem = new TreeItem<>("root");
 
     static {
         pane = new AnchorPane();
@@ -34,24 +38,33 @@ public class LeftPane {
 
     public static void initDbTree() {
 
-        //左侧列表
-        TreeItem<String> rootItem = new TreeItem<>("mp-dev");
-        rootItem.setExpanded(true);
-
-        List<RedisService.Db> dbList = RedisService.getDbList();
-        dbList.forEach(d -> {
-            TreeItem<String> item = new TreeItem<>(d.getName() + "(" + d.getCount().toString() + ")");
-            rootItem.getChildren().add(item);
+        TreeView<String> treeView = new TreeView<>(rootItem);
+        Map<String, RedisClient> clientMap = RedisService.redisClientMap;
+        clientMap.forEach((k,v)->{
+            TreeItem<String> treeItem = new TreeItem<>(k);
+            rootItem.getChildren().add(treeItem);
         });
-
-        TreeView<String> tree = new TreeView<>(rootItem);
-        tree.addEventFilter(MouseEvent.MOUSE_CLICKED, e -> {
-            if (e.getClickCount() == 2) {
-                TreeItem selectedItem = tree.getSelectionModel().getSelectedItem();
+        treeView.setShowRoot(false);
+        treeView.addEventFilter(MouseEvent.MOUSE_CLICKED, e -> {
+            if (e.getClickCount() >0 ) {
+                TreeItem selectedItem = treeView.getSelectionModel().getSelectedItem();
+                if (selectedItem==null){
+                    return;
+                }
                 String value = (String) selectedItem.getValue();
                 TreeItem<String> selectedParentItem = selectedItem.getParent();
                 if (selectedParentItem == null){
                     return;
+                }
+                if (selectedParentItem.getValue().equals("root")){
+                    if (selectedItem.getChildren().size()==0){
+                        List<RedisService.Db> dbList = RedisService.getDbList(value);
+                        dbList.forEach(d -> {
+                            TreeItem<String> item = new TreeItem<>(d.getName() + "(" + d.getCount().toString() + ")");
+                            selectedItem.getChildren().add(item);
+                        });
+                        selectedItem.setExpanded(true);
+                    }
                 }
                 if (selectedParentItem.getValue().startsWith("db")) {
                     String type = RedisService.getType(value);
@@ -88,8 +101,27 @@ public class LeftPane {
             }
         });
 
-        //左侧列表
+        treeView.setCellFactory(p-> new TextFieldTreeCell<>());
 
-        pane.getChildren().addAll(tree);
+
+        pane.getChildren().addAll(treeView);
+    }
+
+
+    private final class TextFieldTreeCellImpl extends TreeCell<String>{
+
+        public TextFieldTreeCellImpl(){
+//
+//                MenuItem addMenuItem = new MenuItem("Add Employee");
+//                addMenu.getItems().add(addMenuItem);
+//                addMenuItem.setOnAction((ActionEvent t) -> {
+//                    TreeItem newEmployee =
+//                            new TreeItem<>("New Employee");
+//                    getTreeItem().getChildren().add(newEmployee);
+//                });
+
+
+
+        }
     }
 }

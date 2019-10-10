@@ -15,7 +15,7 @@ public class BottomPane {
      static{
          pane = new AnchorPane();
         pane.setPrefWidth(100);
-        pane.setPrefHeight(100);
+        pane.setPrefHeight(200);
         pane.setStyle("-fx-background-color: #98FB98");
 
     }

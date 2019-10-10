@@ -91,6 +91,7 @@ public class CenterPane {
         valueArea = new TextArea();
 
         TableView table = new TableView();
+
         TableColumn rowCol = new TableColumn("row");
         TableColumn valueCol = new TableColumn("value");
         rowCol.setCellValueFactory(new PropertyValueFactory<>("index"));
