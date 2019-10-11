@@ -1,15 +1,17 @@
 package com.redis.manager.pane;
 
+import com.redis.manager.config.UserConfig;
+import com.redis.manager.dialog.MyDialog;
 import com.redis.manager.model.RedisClient;
 import com.redis.manager.model.RowData;
 import com.redis.manager.util.RedisService;
 import javafx.collections.ObservableList;
-import javafx.scene.control.TreeCell;
-import javafx.scene.control.TreeItem;
-import javafx.scene.control.TreeView;
-import javafx.scene.control.cell.TextFieldTreeCell;
+import javafx.geometry.Insets;
+import javafx.scene.control.*;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.HBox;
 
 import java.util.List;
 import java.util.Map;
@@ -26,7 +28,9 @@ import java.util.Set;
 public class LeftPane {
 
     public static AnchorPane pane;
-  public static  TreeItem<String> rootItem = new TreeItem<>("root");
+    public static TreeItem<String> rootItem = new TreeItem<>("root");
+
+    public static boolean initDbListFlag = false;
 
     static {
         pane = new AnchorPane();
@@ -40,43 +44,56 @@ public class LeftPane {
 
         TreeView<String> treeView = new TreeView<>(rootItem);
         Map<String, RedisClient> clientMap = RedisService.redisClientMap;
-        clientMap.forEach((k,v)->{
-            TreeItem<String> treeItem = new TreeItem<>(k);
-            rootItem.getChildren().add(treeItem);
+        clientMap.forEach((k, v) -> {
+            createConnectView(k);
         });
+
         treeView.setShowRoot(false);
         treeView.addEventFilter(MouseEvent.MOUSE_CLICKED, e -> {
-            if (e.getClickCount() >0 ) {
+            if (e.getClickCount() > 0 && e.getButton().equals(MouseButton.PRIMARY)) {
                 TreeItem selectedItem = treeView.getSelectionModel().getSelectedItem();
-                if (selectedItem==null){
+                if (selectedItem == null) {
                     return;
                 }
                 String value = (String) selectedItem.getValue();
                 TreeItem<String> selectedParentItem = selectedItem.getParent();
-                if (selectedParentItem == null){
+                if (selectedParentItem == null) {
                     return;
                 }
-                if (selectedParentItem.getValue().equals("root")){
-                    if (selectedItem.getChildren().size()==0){
-                        List<RedisService.Db> dbList = RedisService.getDbList(value);
+                if (selectedParentItem.getValue().equals("root")) {
+                    if (selectedItem.getChildren().size() == 0 && initDbListFlag == false) {
+
+                        List<RedisService.Db> dbList = null;
+                        try {
+                            initDbListFlag = true;
+                            dbList = RedisService.getDbList(value);
+                        } catch (Exception ex) {
+                            ex.printStackTrace();
+                            return;
+                        }finally {
+                            initDbListFlag = false;
+
+                        }
                         dbList.forEach(d -> {
                             TreeItem<String> item = new TreeItem<>(d.getName() + "(" + d.getCount().toString() + ")");
                             selectedItem.getChildren().add(item);
                         });
                         selectedItem.setExpanded(true);
+
+                    }else{
+                        return;
                     }
                 }
                 if (selectedParentItem.getValue().startsWith("db")) {
                     String type = RedisService.getType(value);
                     if (type.equals("string")) {
-                        String v = RedisService.getKey(value);
-                        CenterPane.viewText();
-                        CenterPane.keyText.setText(value);
-                        CenterPane.valueArea.setText(v);
+
+                        CenterPane.viewText(selectedItem);
+
                         return;
                     } else if (type.equals("list")) {
-                        CenterPane.viewList();
-                        CenterPane.keyText.setText(value);
+                        CenterPane.viewList(selectedItem);
+
                         List<String> valueList = RedisService.lrange(value);
                         for (int i = 0; i < valueList.size(); i++) {
                             RowData data = new RowData(i, valueList.get(i));
@@ -84,8 +101,6 @@ public class LeftPane {
                         }
                         return;
                     }
-
-
                 }
                 if (!value.startsWith("db")) {
                     return;
@@ -100,28 +115,32 @@ public class LeftPane {
                 selectedItem.setExpanded(true);
             }
         });
-
-        treeView.setCellFactory(p-> new TextFieldTreeCell<>());
-
-
         pane.getChildren().addAll(treeView);
     }
 
 
-    private final class TextFieldTreeCellImpl extends TreeCell<String>{
+    public static void createConnectView(String connectName){
+        TreeItem<String> treeItem = new TreeItem<>(connectName);
+        treeItem.setExpanded(true);
 
-        public TextFieldTreeCellImpl(){
-//
-//                MenuItem addMenuItem = new MenuItem("Add Employee");
-//                addMenu.getItems().add(addMenuItem);
-//                addMenuItem.setOnAction((ActionEvent t) -> {
-//                    TreeItem newEmployee =
-//                            new TreeItem<>("New Employee");
-//                    getTreeItem().getChildren().add(newEmployee);
-//                });
+        HBox hBox = new HBox();
+        Button del = new Button("Del");
+        Button edit = new Button("Edit");
+        hBox.getChildren().addAll(del,edit);
+        hBox.setPadding(new Insets(0,0,0,20));
+        treeItem.setGraphic(hBox);
 
+        del.addEventHandler(MouseEvent.MOUSE_CLICKED,event -> {
+            UserConfig.removeRedisClient(treeItem.getValue());
+            rootItem.getChildren().remove(treeItem);
+        });
+        edit.addEventHandler(MouseEvent.MOUSE_CLICKED,event -> {
+            MyDialog.openEditDialog(RedisService.redisClientMap.get(treeItem.getValue()),treeItem);
+        });
 
-
-        }
+        rootItem.getChildren().add(treeItem);
     }
+
+
+
 }

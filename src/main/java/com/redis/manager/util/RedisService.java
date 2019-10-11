@@ -92,8 +92,26 @@ public class RedisService {
         return jedis.llen(key);
     }
 
+    public static Long ttl(String key){
+        return jedis.ttl(key);
+    }
+
+    public static Long expire(String key,int seconds){
+        Long expire = jedis.expire(key, seconds);
+        return expire;
+    }
+
     public static List<String> lrange(String key) {
         return jedis.lrange(key, 0, getLength(key));
+    }
+
+    public static void rename(String oldKeyName, String newKeyName) {
+        jedis.rename(oldKeyName,newKeyName);
+    }
+
+    public static Long delete(String key) {
+        Long del = jedis.del(key);
+        return del;
     }
 
     @AllArgsConstructor

@@ -3,6 +3,7 @@ package com.redis.manager.config;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.redis.manager.model.RedisClient;
+import com.redis.manager.util.RedisService;
 import lombok.*;
 
 import java.util.ArrayList;
@@ -52,6 +53,8 @@ public class UserConfig {
                 redisClient.setPassword(newClient.getPassword());
             }
         }
+        RedisService.redisClientMap.remove(oldClient.getName());
+        RedisService.redisClientMap.put(newClient.getName(),newClient);
         Help.putUserConfig();
     }
 

@@ -1,13 +1,14 @@
 package com.redis.manager.pane;
 
+import com.redis.manager.dialog.MyDialog;
 import com.redis.manager.model.RowData;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
+import com.redis.manager.util.RedisService;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 
@@ -22,13 +23,11 @@ import javafx.scene.layout.GridPane;
 public class CenterPane {
     public static AnchorPane pane;
 
-    public static Label keyLabel;
-    public static Label valueLabel;
 
-    public static TextArea valueArea;
-    public static TextField keyText;
+    public static TextArea valueArea = new TextArea();
+  //  public static TextField keyText = new TextField();
 
-    public static ObservableList<RowData> listData =  FXCollections.observableArrayList();
+    public static ObservableList<RowData> listData = FXCollections.observableArrayList();
 
 
     static {
@@ -39,31 +38,60 @@ public class CenterPane {
 
     }
 
-    public static void viewText() {
-        if (pane.getChildren().size()>0){
+    static Label StringKeyLabel = new Label("STRING: ");
+    static Label ListKeyLabel = new Label("List: ");
+
+    public static void viewText(TreeItem selectedItem) {
+        if (pane.getChildren().size() > 0) {
             pane.getChildren().remove(0);
         }
-
-        keyLabel = new Label("STRING: ");
-        keyText = new TextField();
-        valueArea = new TextArea();
-
+        TextField keyText = new TextField();
+        String key = (String) selectedItem.getValue();
+        keyText.setText(key);
+        String value = RedisService.getKey(key);
+        valueArea.setText(value);
 
         final ComboBox priorityComboBox = new ComboBox();
         priorityComboBox.getItems().addAll("JSON", "TEXT");
 
         priorityComboBox.setValue("JSON");
 
+        //重命名
         Button renameBtn = new Button("Rename");
-        Button ttlBtn = new Button("TTL:-1");
+        renameBtn.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
+            String newKeyName = MyDialog.renameKeyDialog(keyText.getText());
+            keyText.setText(newKeyName);
+            selectedItem.setValue(newKeyName);
+        });
+        //设置过期时间
+        String ttl = RedisService.ttl(key).toString();
+        Button ttlBtn = new Button("TTL:" + ttl);
+        ttlBtn.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
+            String newTtl = MyDialog.ttlKeyDialog(key, ttl);
+            ttlBtn.setText("TTL:" + newTtl);
+        });
+        //删除
         Button delBtn = new Button("Delete");
+        delBtn.addEventHandler(MouseEvent.MOUSE_CLICKED,event -> {
+            String result = MyDialog.delDialog(key);
+            TreeItem parent = selectedItem.getParent();
+            parent.getChildren().remove(selectedItem);
+            pane.getChildren().remove(0);
+        });
+        //重新加载
         Button reloadBtn = new Button("Reload Value");
+        reloadBtn.addEventHandler(MouseEvent.MOUSE_CLICKED,event -> {
+            String v = RedisService.getKey(key);
+            valueArea.setText(v);
+            String expireTime = RedisService.ttl(key).toString();
+            ttlBtn.setText("TTL:" + expireTime);
+        });
 
         GridPane grid = new GridPane();
         grid.setVgap(6);
         grid.setHgap(10);
         grid.setPadding(new Insets(5, 5, 5, 5));
-        grid.add(keyLabel, 0, 0);
+        grid.add(StringKeyLabel, 0, 0);
         grid.add(keyText, 1, 0);
         grid.add(renameBtn, 2, 0);
         grid.add(ttlBtn, 3, 0);
@@ -81,23 +109,21 @@ public class CenterPane {
 
     }
 
-    public static void viewList() {
-        if (pane.getChildren().size()>0){
+    public static void viewList(TreeItem selectedItem) {
+        if (pane.getChildren().size() > 0) {
             pane.getChildren().remove(0);
         }
         listData.clear();
-        keyLabel = new Label("List: ");
-        keyText = new TextField();
+        TextField keyText = new TextField();
+        keyText.setText((String) selectedItem.getValue());
         valueArea = new TextArea();
-
         TableView table = new TableView();
-
         TableColumn rowCol = new TableColumn("row");
         TableColumn valueCol = new TableColumn("value");
         rowCol.setCellValueFactory(new PropertyValueFactory<>("index"));
         valueCol.setCellValueFactory(new PropertyValueFactory<>("value"));
         table.setItems(listData);
-        table.getColumns().addAll(rowCol,valueCol);
+        table.getColumns().addAll(rowCol, valueCol);
 
         table.getSelectionModel().selectedItemProperty().addListener(((observable, oldValue, newValue) -> {
             RowData data = (RowData) newValue;
@@ -108,8 +134,8 @@ public class CenterPane {
         grid.setVgap(4);
         grid.setHgap(10);
         grid.setPadding(new Insets(5, 5, 5, 5));
-        grid.add(keyLabel, 0, 0);
-        grid.add(keyText, 1, 0,3,1);
+        grid.add(ListKeyLabel, 0, 0);
+        grid.add(keyText, 1, 0, 3, 1);
 
         grid.add(table, 0, 1, 4, 1);
         grid.add(valueArea, 0, 2, 4, 1);
